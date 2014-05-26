@@ -19,58 +19,47 @@
 #import "CDSearchPathState.h"
 
 NSString *CDErrorDomain_ClassDump = @"CDErrorDomain_ClassDump";
-
 NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
-
-@interface CDClassDump ()
-@end
-
-#pragma mark -
 
 @implementation CDClassDump
 {
     CDSearchPathState *_searchPathState;
     
-    BOOL _shouldProcessRecursively;
-    BOOL _shouldSortClasses; // And categories, protocols
-    BOOL _shouldSortClassesByInheritance; // And categories, protocols
-    BOOL _shouldSortMethods;
+    BOOL _shouldProcessRecursively,
+         _shouldSortClasses,                // And categories, protocols
+         _shouldSortClassesByInheritance,   // And categories, protocols
+         _shouldSortMethods;
     
-    BOOL _shouldShowIvarOffsets;
-    BOOL _shouldShowMethodAddresses;
-    BOOL _shouldShowHeader;
+    BOOL _shouldShowIvarOffsets,
+         _shouldShowMethodAddresses,
+         _shouldShowHeader;
     
     NSRegularExpression *_regularExpression;
-    
-    NSString *_sdkRoot;
-    NSMutableArray *_machOFiles;
+    NSString            *_sdkRoot;
     NSMutableDictionary *_machOFilesByName;
-    NSMutableArray *_objcProcessors;
-    
-    CDTypeController *_typeController;
+    NSMutableArray      *_machOFiles,
+                        *_objcProcessors;
+
+    CDTypeController    *_typeController;
     
     CDArch _targetArch;
 }
 
 - (id)init;
 {
-    if ((self = [super init])) {
-        _searchPathState = [[CDSearchPathState alloc] init];
-        _sdkRoot = nil;
-        
-        _machOFiles = [[NSMutableArray alloc] init];
-        _machOFilesByName = [[NSMutableDictionary alloc] init];
-        _objcProcessors = [[NSMutableArray alloc] init];
-        
-        _typeController = [[CDTypeController alloc] initWithClassDump:self];
-        
-        // These can be ppc, ppc7400, ppc64, i386, x86_64
-        _targetArch.cputype = CPU_TYPE_ANY;
-        _targetArch.cpusubtype = 0;
-        
-        _shouldShowHeader = YES;
-    }
-
+    if (!(self = [super init])) return nil;
+    _sdkRoot            = nil;
+    _searchPathState    = CDSearchPathState.new;
+    _machOFiles         = NSMutableArray.new;
+    _machOFilesByName   = NSMutableDictionary.new;
+    _objcProcessors     = NSMutableArray.new;
+    _typeController     = [CDTypeController.alloc initWithClassDump:self];
+    
+    // These can be ppc, ppc7400, ppc64, i386, x86_64
+    _targetArch.cputype     = CPU_TYPE_ANY;
+    _targetArch.cpusubtype  = 0;
+    
+    _shouldShowHeader = YES;
     return self;
 }
 
@@ -78,34 +67,25 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
 
 - (BOOL)shouldShowName:(NSString *)name;
 {
-    if (self.regularExpression != nil) {
-        NSTextCheckingResult *firstMatch = [self.regularExpression firstMatchInString:name options:(NSMatchingOptions)0 range:NSMakeRange(0, [name length])];
-        return firstMatch != nil;
-    }
-
-    return YES;
+    return !!_regularExpression
+    ? !![self.regularExpression firstMatchInString:name options:(NSMatchingOptions)0
+                                             range:NSMakeRange(0, [name length])]
+    : YES;
 }
 
 #pragma mark -
 
 - (BOOL)containsObjectiveCData;
 {
-    for (CDObjectiveCProcessor *processor in self.objcProcessors) {
-        if ([processor hasObjectiveCData])
-            return YES;
-    }
-
+    for (CDObjectiveCProcessor *processor in self.objcProcessors)
+        if ([processor hasObjectiveCData]) return YES;
     return NO;
 }
 
 - (BOOL)hasEncryptedFiles;
 {
-    for (CDMachOFile *machOFile in self.machOFiles) {
-        if ([machOFile isEncrypted]) {
-            return YES;
-        }
-    }
-
+    for (CDMachOFile *machOFile in self.machOFiles)
+        if ([machOFile isEncrypted]) return YES;
     return NO;
 }
 
@@ -119,16 +99,17 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
     //NSLog(@"targetArch: (%08x, %08x)", targetArch.cputype, targetArch.cpusubtype);
     CDMachOFile *machOFile = [file machOFileWithArch:_targetArch];
     //NSLog(@"machOFile: %@", machOFile);
-    if (machOFile == nil) {
+    if (!machOFile) {
         if (error != NULL) {
-            NSString *failureReason;
+
             NSString *targetArchName = CDNameForCPUType(_targetArch.cputype, _targetArch.cpusubtype);
-            if ([file isKindOfClass:[CDFatFile class]] && [(CDFatFile *)file containsArchitecture:_targetArch]) {
-                failureReason = [NSString stringWithFormat:@"Fat file doesn't contain a valid Mach-O file for the specified architecture (%@).  "
-                                                            "It probably means that class-dump was run on a static library, which is not supported.", targetArchName];
-            } else {
-                failureReason = [NSString stringWithFormat:@"File doesn't contain the specified architecture (%@).  Available architectures are %@.", targetArchName, file.architectureNameDescription];
-            }
+
+            NSString *failureReason  = [file isKindOfClass:[CDFatFile class]] &&
+                                       [(CDFatFile *)file containsArchitecture:_targetArch]
+            ? [NSString stringWithFormat:@"Fat file doesn't contain a valid Mach-O file for the specified architecture (%@).  "
+                                          "It probably means that class-dump was run on a static library, which is not supported.", targetArchName]
+            : [NSString stringWithFormat:@"File doesn't contain the specified architecture (%@).  Available architectures are %@.", targetArchName, file.architectureNameDescription];
+
             NSDictionary *userInfo = @{ NSLocalizedFailureReasonErrorKey : failureReason };
             *error = [NSError errorWithDomain:CDErrorDomain_ClassDump code:0 userInfo:userInfo];
         }
@@ -149,7 +130,6 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
                         [self.searchPathState pushSearchPaths:[machOFile runPaths]];
                         {
                             NSString *loaderPathPrefix = @"@loader_path";
-                            
                             NSString *path = [dylibCommand path];
                             if ([path hasPrefix:loaderPathPrefix]) {
                                 NSString *loaderPath = [machOFile.filename stringByDeletingLastPathComponent];
@@ -167,14 +147,12 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
             if (error != NULL) {
                 NSDictionary *userInfo = @{
                 NSLocalizedFailureReasonErrorKey : @"Caught exception",
-                CDErrorKey_Exception             : exception,
-                };
+                            CDErrorKey_Exception : exception };
                 *error = [NSError errorWithDomain:CDErrorDomain_ClassDump code:0 userInfo:userInfo];
             }
             return NO;
         }
     }
-
     return YES;
 }
 
@@ -194,9 +172,8 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
 {
     [visitor willBeginVisiting];
 
-    for (CDObjectiveCProcessor *processor in self.objcProcessors) {
+    for (CDObjectiveCProcessor *processor in self.objcProcessors)
         [processor recursivelyVisit:visitor];
-    }
 
     [visitor didEndVisiting];
 }
@@ -214,33 +191,26 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
         for (NSString *searchPath in [self.searchPathState searchPaths]) {
             NSString *str = [name stringByReplacingOccurrencesOfString:rpathPrefix withString:searchPath];
             //NSLog(@"trying %@", str);
-            if ([[NSFileManager defaultManager] fileExistsAtPath:str]) {
+            if ([NSFileManager.defaultManager fileExistsAtPath:str]) {
                 adjustedName = str;
                 //NSLog(@"Found it!");
                 break;
             }
         }
-        if (adjustedName == nil) {
-            adjustedName = name;
-            //NSLog(@"Did not find it.");
-        }
-    } else if (self.sdkRoot != nil) {
-        adjustedName = [self.sdkRoot stringByAppendingPathComponent:name];
-    } else {
-        adjustedName = name;
-    }
+        adjustedName = adjustedName ?: name; //NSLog(@"Did not find it.");
+
+    } else adjustedName = self.sdkRoot ? [self.sdkRoot stringByAppendingPathComponent:name] : name;
 
     CDMachOFile *machOFile = _machOFilesByName[adjustedName];
-    if (machOFile == nil) {
+    if (!machOFile) {
+
         CDFile *file = [CDFile fileWithContentsOfFile:adjustedName searchPathState:self.searchPathState];
 
-        if (file == nil || [self loadFile:file error:NULL] == NO)
-            NSLog(@"Warning: Failed to load: %@", adjustedName);
+        !file || ![self loadFile:file error:NULL] ?
+            NSLog(@"Warning: Failed to load: %@", adjustedName) : nil;
 
-        machOFile = _machOFilesByName[adjustedName];
-        if (machOFile == nil) {
-            NSLog(@"Warning: Couldn't load MachOFile with ID: %@, adjustedID: %@", name, adjustedName);
-        }
+        !(machOFile = _machOFilesByName[adjustedName]) ?
+            NSLog(@"Warning: Couldn't load MachOFile with ID: %@, adjustedID: %@", name, adjustedName) : nil;
     }
 
     return machOFile;
@@ -249,44 +219,33 @@ NSString *CDErrorKey_Exception    = @"CDErrorKey_Exception";
 - (void)appendHeaderToString:(NSMutableString *)resultString;
 {
     // Since this changes each version, for regression testing it'll be better to be able to not show it.
-    if (self.shouldShowHeader == NO)
-        return;
+    if (!self.shouldShowHeader) return;
 
-    [resultString appendString:@"//\n"];
-    [resultString appendFormat:@"//  Generated by class-dump %s.\n", CLASS_DUMP_VERSION];
-    [resultString appendString:@"//\n"];
-    [resultString appendString:@"//     class-dump is Copyright (C) 1997-1998, 2000-2001, 2004-2014 by Steve Nygard.\n"];
-    [resultString appendString:@"//\n\n"];
-
-    if (self.sdkRoot != nil) {
-        [resultString appendString:@"//\n"];
-        [resultString appendFormat:@"// SDK Root: %@\n", self.sdkRoot];
-        [resultString appendString:@"//\n\n"];
-    }
+    [resultString appendFormat: @"/*"
+        CD_NEWLINE "Generated by 𝖼𝗅𝖺𝗌𝗌-𝖽𝗎𝗆𝗉 %s"
+        CD_NEWLINE "𝖼𝗅𝖺𝗌𝗌-𝖽𝗎𝗆𝗉 is Copyright © 1997-1998, 2000-2001, 2004-2014 by Steve Nygard."
+        "%@"                // SDK ?
+        "\n */\n\n",        // END HEADER BANNER
+        CLASS_DUMP_VERSION, CD_MAYBE_FMT(_sdkRoot,"SDK Root:%@",_sdkRoot)];
 }
 
 - (void)registerTypes;
 {
-    for (CDObjectiveCProcessor *processor in self.objcProcessors) {
+    for (CDObjectiveCProcessor *processor in self.objcProcessors)
         [processor registerTypesWithObject:self.typeController phase:0];
-    }
-    [self.typeController endPhase:0];
 
+    [self.typeController endPhase:0];
     [self.typeController workSomeMagic];
 }
 
 - (void)showHeader;
 {
-    if ([self.machOFiles count] > 0) {
-        [[[self.machOFiles lastObject] headerString:YES] print];
-    }
+    if (self.machOFiles.count) [[self.machOFiles.lastObject headerString:YES] print];
 }
 
 - (void)showLoadCommands;
 {
-    if ([self.machOFiles count] > 0) {
-        [[[self.machOFiles lastObject] loadCommandString:YES] print];
-    }
+    if (self.machOFiles.count) [[self.machOFiles.lastObject loadCommandString:YES] print];
 }
 
 @end
