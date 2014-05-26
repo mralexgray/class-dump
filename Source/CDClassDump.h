@@ -64,3 +64,8 @@ extern NSString *CDErrorDomain_ClassDump;
 extern NSString *CDErrorKey_Exception;
 
 
+#define CD_NEWLINE "\n *\t" // spacing helper
+/*! @param IF_TRUE If this parameter resolved to NO, nothing will be printed.
+    @param FMT char format string, followed by the appriate number of variadic arguments or the format string. */
+#define CD_MAYBE_FMT(IF_TRUE,FMT,...) \
+    !!IF_TRUE ? [NSString stringWithFormat:@"" CD_NEWLINE FMT,__VA_ARGS__] : @""
