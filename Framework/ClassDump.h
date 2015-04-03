@@ -11,3 +11,6 @@
 #import "ClassDump/CDClassDumpOperation.h"
 
 #import "ClassDump/ClassDump-Constants.h"
+#import "ClassDump/CDClassDump.h"
+#import "ClassDump/CDVisitor.h"
+#import "ClassDump/CDTextClassDumpVisitor.h"

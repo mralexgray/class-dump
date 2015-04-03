@@ -4,6 +4,7 @@
 //  Copyright (C) 1997-1998, 2000-2001, 2004-2014 Steve Nygard.
 
 #import "NSString-CDExtensions.h"
+#import "NSData-CDExtensions.h"
 
 @implementation NSString (CDExtensions)
 

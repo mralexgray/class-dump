@@ -15,3 +15,12 @@
 - (void)writeResultToStandardOutput;
 
 @end
+
+
+// Has a mutable string for storing output, and method to write it to standard out.
+// symbol references are for... ?
+
+@interface CDHoardingClassDumpVisitor : CDVisitor
+
+@property (readonly) NSMutableDictionary *resultD;
+@end

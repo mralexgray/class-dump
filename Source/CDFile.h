@@ -4,6 +4,7 @@
 //  Copyright (C) 1997-1998, 2000-2001, 2004-2014 Steve Nygard.
 
 #include <mach/machine.h> // For cpu_type_t, cpu_subtype_t
+@import Foundation;
 
 typedef struct {
     cpu_type_t cputype;
