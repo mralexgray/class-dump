@@ -7,7 +7,7 @@
 //
 
 #import "CDClassDump+NSErrorBasedAPI.h"
-
+@import ClassDump;
 #import "ClassDump-Constants.h"
 #import "ClassDumpService-Constants.h"
 

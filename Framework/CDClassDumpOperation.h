@@ -10,9 +10,8 @@
 
 @interface CDClassDumpOperation : NSOperation
 
-+ (instancetype) instanceWithBundleOrExecutable:(NSURL*)bundleOrExecutableLoc
-                                      exportDir:(NSURL*)exportDirectoryLoc;
+- (id)initWithBundleOrExecutableLocation:(NSURL *)bundleOrExecutableLocation exportDirectoryLocation:(NSURL *)exportDirectoryLocation;
 
-@property (readonly,copy) NSURL* (^completionProvider)(NSError**errorRef);
+@property (readonly, copy, atomic) NSURL * (^completionProvider)(NSError **errorRef);
 
 @end

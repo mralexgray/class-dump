@@ -10,8 +10,6 @@
 
 @protocol CDClassDumpServerInterface <NSObject>
 
-- (void)classDumpBundleOrExecutableBookmarkData:(NSData*)bundleOrExecutableBookmarkData
-                    exportDirectoryBookmarkData:(NSData*)exportDirectoryBookmarkData
-                                       response:(void(^)(NSNumber*success, NSError*error))response;
+- (void)classDumpBundleOrExecutableBookmarkData:(NSData *)bundleOrExecutableBookmarkData exportDirectoryBookmarkData:(NSData *)exportDirectoryBookmarkData response:(void (^)(NSNumber *success, NSError *error))response;
 
 @end

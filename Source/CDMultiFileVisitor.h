@@ -4,8 +4,8 @@
 //  Copyright (C) 1997-1998, 2000-2001, 2004-2014 Steve Nygard.
 
 #import "CDTextClassDumpVisitor.h"
-
 #import "CDTypeController.h" // For CDTypeControllerDelegate protocol
+#import "ClassDump.h"
 
 // This generates separate files for each class.  Files are created in the 'outputPath' directory.
 
